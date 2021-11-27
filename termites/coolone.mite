@@ -1,4 +1,4 @@
-a 0 -> a 1 left
-a 1 -> b 0 forward
-b 0 -> a 1 right
-b 1 -> a 1 right
+a 0 -> a 1 right
+a 1 -> a 2 left
+a 2 -> a 3 left
+a 3 -> a 0 right
