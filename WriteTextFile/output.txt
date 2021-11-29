@@ -1,0 +1,14 @@
+Data for accession ID is: AJODBU20.6 
+Sequence is: AAA and Value is 2 
+Sequence is: CAC and Value is 23 
+Sequence is: ATA and Value is 21 
+Sequence is: CGA and Value is 4 
+
+ 
+Data for accession ID is: AJODBU20.6 
+Sequence is: AAA and Value is 2 
+Sequence is: CAC and Value is 23 
+Sequence is: ATA and Value is 21 
+Sequence is: CGA and Value is 4 
+
+ 
