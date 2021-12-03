@@ -9,7 +9,6 @@ import (
 	"log"
 	"os"
 	"strings"
-	"strconv"
 )
 
 type ColorID int
@@ -149,28 +148,28 @@ func ReadTurmite(filename string, size int) (*Turmite, error) {
 			continue
 		}
 
-		var color_in, color_out ColorID
+		var colorIn, colorOut ColorID
 		var dirString string
-		var state_in_char, state_out_char rune
+		var stateInChar, stateOutChar rune
 
 		n, err := fmt.Sscanf(line, "%c %d -> %c %d %s",
-			&state_in_char,
-			&color_in,
-			&state_out_char,
-			&color_out,
+			&stateInChar,
+			&colorIn,
+			&stateOutChar,
+			&colorOut,
 			&dirString)
 		if err != nil || n != 5 {
 			return nil, fmt.Errorf("Badly formatted line: %d", lineno)
 		}
-		state_in := State(state_in_char - 'a')
-		state_out := State(state_out_char - 'a')
+		stateIn := State(stateInChar - 'a')
+		stateOut := State(stateOutChar - 'a')
 		dir, err := DirFromString(dirString)
 		if err != nil {
 			return nil, err
 		}
-		tur.rules[Signal{state: state_in, color: color_in}] = Action{
-			state: state_out,
-			color: color_out,
+		tur.rules[Signal{state: stateIn, color: colorIn}] = Action{
+			state: stateOut,
+			color: colorOut,
 			turn:  dir,
 		}
 	}
@@ -183,77 +182,63 @@ func ReadTurmite(filename string, size int) (*Turmite, error) {
 // turmite gets stuck with no rule to apply.
 func (t *Turmite) Step(field Field) error {
 
-	for i:= 0 ; i < len(t.rules) ; i ++{
+	for i := 0; i < len(t.rules); i++ {
 
-		direction := t.currentDir
-		state_in := t.state
-		color_in := field[t.y][t.x]
-		
-		state,color,turn := t.rules[Signal{state:state_in, color: color_in}].state, t.rules[Signal{state:state_in, color: color_in}].color, t.rules[Signal{state:state_in, color: color_in}].turn
-		
-		//fmt.Println("direction is ",direction)
-		//fmt.Println(state_in,color_in)
-		//fmt.Println(state,color,turn)	
-		//fmt.Println("cooridinates x and y are",t.x,t.y)
-		switch turn {
-		case 1:
-			direction = direction + 1
-		case 2:
-			direction = direction + 2
-		case 3:
-			direction = direction + 3  
+		stateIn := t.state
+		colorIn := field[t.y][t.x]
+
+		SignalObject := Signal {
+			state: stateIn, 
+			color: colorIn,	
 		}
-		direction = direction % 4
+
+		LatestRule := t.rules[SignalObject]
+
+		state, color, turn := LatestRule.state, LatestRule.color, LatestRule.turn
+
+		//Updating params before moving
+		t.state = state
 		field[t.y][t.x] = color
 
-		// Update position - wrap if needed
-		switch direction {
-		case 1:
-			if t.y + 1 < 100 {
-				t.y = t.y + 1
-			} else {
-				return nil
-			}
-		case 2:
-			if t.x - 1 > 0 {
-				t.x = t.x - 1
-			} else {
-				return nil
-			}
-		case 3:
-			if t.y - 1 > 0 {
-				t.y = t.y - 1
-			} else {
-				return nil
-			}
-		case 0:
-			if t.x + 1 < 100 {
-				t.x = t.x + 1
-			} else {
-				return nil
-			}
+		if turn == LeftDir {
+			t.currentDir = t.currentDir.Left()
+		} else if turn == RightDir {
+			t.currentDir = t.currentDir.Right()
+		} else if turn == BackwardDir {
+			t.currentDir = t.currentDir.Right()
+			t.currentDir = t.currentDir.Right()
+		} else {
+			t.currentDir = t.currentDir // Do nothing for forward dirction
 		}
 
-		t.state = state
-		t.currentDir = direction 
-		//field[t.y][t.x] = color
+		if t.currentDir == LeftDir {
+			if t.x-1 > 0 {
+				t.x = t.x - 1
+			}
+		} else if t.currentDir == RightDir {
+			if t.x+1 < 100 {
+				t.x = t.x + 1
+			}
+		} else if t.currentDir == BackwardDir {
+			if t.y-1 > 0 {
+				t.y = t.y - 1
+			}
+		} else {
+			if t.y+1 < 100 {
+				t.y = t.y + 1
+			}
+		}
 	}
 	return nil
 }
 
 func main() {
 	var program, pngfile string
-	//var fieldSize, iters int
+	var fieldSize, iters int
 
-	flag.Parse()                     // To Register command-line flags.
-	arguments := flag.Args()
-	program = arguments[0] 
-	fieldSize, err := strconv.Atoi(arguments[1]) 
-	iters, err := strconv.Atoi(arguments[2])
-
-	//flag.StringVar(&program, "prog", "", "File containing the turmite program")
-	//flag.IntVar(&fieldSize, "s", 100, "Size of the field")
-	//flag.IntVar(&iters, "steps", 10000, "Number of steps")
+	flag.StringVar(&program, "prog", "", "File containing the turmite program")
+	flag.IntVar(&fieldSize, "s", 100, "Size of the field")
+	flag.IntVar(&iters, "steps", 1500, "Number of steps")
 	flag.StringVar(&pngfile, "o", "output.png", "Filename to draw output")
 	flag.Parse()
 
